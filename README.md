@@ -32,6 +32,22 @@ Please refer to the [IFrame API](https://jitsi.github.io/handbook/docs/dev-guide
 
 ### Integrating LJM into your web app
 
+If you have decided to use the low level API, you are in the right place! This document contains
+a walkthrough of the basics. If you want to run the sample code here, run the following:
+
+```js
+git clone https://github.com/jitsi/ljm-getting-started.git
+cd ljm-getting-started
+npm install
+npm start
+```
+
+The built site will be available in https://localhost:8000
+
+Now let's dive right in!
+
+----
+
 In order to get started working with LJM the first step is to load and initialize
 the library.
 
