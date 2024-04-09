@@ -1,0 +1,14 @@
+{
+  "name": "lib-jitsi-meet-sample",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "esbuild src/index.js --bundle --watch --format=esm --outfile=www/app.js --serve --servedir=www"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "esbuild": "^0.20.2"
+  }
+}
