@@ -5,7 +5,6 @@ const state = {
     appId: '',
     room: '',
     jwt: '',
-    connection: undefined,
     conference: undefined,
 };
 
@@ -20,7 +19,7 @@ const leaveBtn = document.getElementById('leaveBtn');
 
 function updateJoinForm() {
     // In a meeting.
-    if (state.connection) {
+    if (state.conference) {
         appIdEl.disabled = true;
         roomEl.disabled = true;
         jwtEl.disabled = true;
@@ -62,22 +61,6 @@ leaveBtn.onclick = async () => {
     updateJoinForm();
 };
 
-
-function buildOptions(appId, room) {
-    return {
-        hosts: {
-            domain: '8x8.vc',
-            muc: `conference.${appId}.8x8.vc`
-        },
-        serviceUrl: `wss://8x8.vc/${appId}/xmpp-websocket?room=${room}`,
-        websocketKeepAliveUrl: `https://8x8.vc/${appId}/_unlock?room=${room}`,
-    };
-}
-
-const TrackOps = {
-    ADD: 'ADD',
-    REMOVE: 'REMOVE'
-};
 
 const handleTrackAdded = track => {
     if (track.getType() === 'video') {
@@ -121,11 +104,14 @@ const onUserLeft = id => {
     console.log('user left!', id);
 };
 
-const onConnectionSuccess = async () => {
-    // Initialize conference
-    const c = state.conference = state.connection.initJitsiConference(state.room, {});
+async function connect() {
+    // Create local tracks
+    const localTracks = await JitsiMeetJS.createLocalTracks({ devices: [ 'audio', 'video' ] });
+    const joinOptions = {
+        tracks: localTracks,
+    };
+    const c = await JitsiMeetJS.joinConference(state.room, state.appId, state.jwt, joinOptions);
 
-    // Setup event listeners
     c.on(
         JitsiMeetJS.events.conference.TRACK_ADDED,
         handleTrackAdded);
@@ -145,59 +131,18 @@ const onConnectionSuccess = async () => {
         JitsiMeetJS.events.conference.USER_LEFT,
         onUserLeft);
 
-    // Create local tracks
-    const localTracks = await JitsiMeetJS.createLocalTracks({ devices: [ 'audio', 'video' ] });
-
-    // Add local tracks before joining
-    for (const track of localTracks) {
-        await c.addTrack(track);
-    }
-
-    // Join
-    c.join();
-};
-
-const onConnectionFailed = () => {
-    console.error('connection failed!');
-};
-
-const onConnectionDisconnected = () => {
-    console.log('connection disconnected!');
-};
-
-async function connect() {
-    const options = buildOptions(state.appId, state.room);
-
-    // Create connection.
-    const connection = state.connection = new JitsiMeetJS.JitsiConnection(null, state.jwt, options);
-    connection.addEventListener(
-        JitsiMeetJS.events.connection.CONNECTION_ESTABLISHED,
-        onConnectionSuccess);
-    connection.addEventListener(
-        JitsiMeetJS.events.connection.CONNECTION_FAILED,
-        onConnectionFailed);
-    connection.addEventListener(
-        JitsiMeetJS.events.connection.CONNECTION_DISCONNECTED,
-        onConnectionDisconnected);
-
-    connection.connect();
+    state.conference = c;
 }
 
 // Leave the room and proceed to cleanup.
 async function leave() {
     if (state.conference) {
-        await state.conference.leave();
+        await state.conference.dispose();
     }
 
-    if (state.connection) {
-        await state.connection.disconnect();
-    }
-
-    state.connection = undefined;
     state.conference = undefined;
 }
 
 // Initialize library.
 JitsiMeetJS.init();
-JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.INFO);
 console.log(`using LJM version ${JitsiMeetJS.version}!`);
