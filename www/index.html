@@ -31,7 +31,29 @@
         </div>
 
         <button type="button" class="btn btn-primary me-3" id="joinBtn">Join</button>
-        <button type="button" class="btn btn-primary me-3" id="leaveBtn">Leave</button>
+        <button type="button" class="btn btn-primary me-3" id="leaveBtn">Leave</button>      
+    </div>
+    <div id="audioSetings" class="container-fluid" style="visibility: hidden;">
+        <div>
+            Audio settings
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="echoCancellation" value="echoCancellation">
+                <label class="form-check-label" for="echoCancellation">Echo cancellation</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="noiseSuppression" value="noiseSuppression">
+                <label class="form-check-label" for="noiseSuppression">Noise supression</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="autoGainControl" value="autoGainControl">
+                <label class="form-check-label" for="autoGainControl">Auto gain control</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="channelCount" value="channelCount">
+                <label class="form-check-label" for="channelCount">Stereo</label>
+            </div>
+            <button type="button" class="btn btn-primary me-3" id="btnSettings">Apply</button>
+        </div>  
     </div>
     <div class="container-fluid">
         <div id="meeting-grid" class="row"></div>
