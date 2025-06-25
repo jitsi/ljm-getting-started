@@ -17,7 +17,7 @@ const roomEl = document.getElementById('roomText');
 const jwtEl = document.getElementById('jwtText');
 const joinBtn = document.getElementById('joinBtn');
 const leaveBtn = document.getElementById('leaveBtn');
-const audioSettingsForm = document.getElementById('audioSetings');
+const audioSettingsForm = document.getElementById('audioSettings');
 
 function updateJoinForm() {
     // In a meeting.
@@ -79,7 +79,7 @@ const handleTrackAdded = track => {
             const checkboxes = audioSettingsForm.querySelectorAll('.form-check-input');
             const audioTrackSettings = track.getTrack().getSettings();
  
-            checkboxes.forEach((cb) => {
+            checkboxes.forEach(cb => {
                 cb.checked = cb.id === 'channelCount' ? audioTrackSettings[cb.id] === 2 : audioTrackSettings[cb.id];   
             }) 
         
@@ -178,7 +178,7 @@ async function handleBtnSettings() {
     
     const audioTrackSettings = state.localAudioTrack.getTrack().getSettings();
 
-    checkboxes.forEach((cb) => {
+    checkboxes.forEach(cb => {
         cb.checked = cb.id === 'channelCount' ? audioTrackSettings[cb.id] === 2 : audioTrackSettings[cb.id];   
     }) 
 }
