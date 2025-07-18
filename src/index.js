@@ -107,31 +107,83 @@ const onUserLeft = id => {
 async function connect() {
     // Create local tracks
     const localTracks = await JitsiMeetJS.createLocalTracks({ devices: [ 'audio', 'video' ] });
-    const joinOptions = {
-        tracks: localTracks,
-    };
-    const c = await JitsiMeetJS.joinConference(state.room, state.appId, state.jwt, joinOptions);
+    
+    // Build connection options
+    function buildOptions(appId, room) {
+        return {
+            hosts: {
+                domain: '8x8.vc',
+                muc: `conference.${appId}.8x8.vc`,
+                focus: 'focus.8x8.vc'
+            },
+            serviceUrl: `wss://8x8.vc/${appId}/xmpp-websocket?room=${room}`,
+            websocketKeepAliveUrl: `https://8x8.vc/${appId}/_unlock?room=${room}`,
+        };
+    }
 
-    c.on(
-        JitsiMeetJS.events.conference.TRACK_ADDED,
-        handleTrackAdded);
-    c.on(
-        JitsiMeetJS.events.conference.TRACK_REMOVED,
-        handleTrackRemoved);
-    c.on(
-        JitsiMeetJS.events.conference.CONFERENCE_JOINED,
-        onConferenceJoined);
-    c.on(
-        JitsiMeetJS.events.conference.CONFERENCE_LEFT,
-        onConferenceLeft);
-    c.on(
-        JitsiMeetJS.events.conference.USER_JOINED,
-        onUserJoined);
-    c.on(
-        JitsiMeetJS.events.conference.USER_LEFT,
-        onUserLeft);
+    const options = buildOptions(state.appId, state.room);
 
-    state.conference = c;
+    // Create connection
+    const connection = new JitsiMeetJS.JitsiConnection(null, state.jwt, options);
+    
+    return new Promise((resolve, reject) => {
+        const onConnectionSuccess = async () => {
+            // Initialize conference
+            const conference = connection.initJitsiConference(state.room, {});
+
+            // Setup event listeners
+            conference.on(
+                JitsiMeetJS.events.conference.TRACK_ADDED,
+                handleTrackAdded);
+            conference.on(
+                JitsiMeetJS.events.conference.TRACK_REMOVED,
+                handleTrackRemoved);
+            conference.on(
+                JitsiMeetJS.events.conference.CONFERENCE_JOINED,
+                onConferenceJoined);
+            conference.on(
+                JitsiMeetJS.events.conference.CONFERENCE_LEFT,
+                onConferenceLeft);
+            conference.on(
+                JitsiMeetJS.events.conference.USER_JOINED,
+                onUserJoined);
+            conference.on(
+                JitsiMeetJS.events.conference.USER_LEFT,
+                onUserLeft);
+
+            // Add local tracks before joining
+            for (const track of localTracks) {
+                await conference.addTrack(track);
+            }
+
+            // Join
+            conference.join();
+
+            state.conference = conference;
+            resolve();
+        };
+
+        const onConnectionFailed = (error) => {
+            console.error('Connection failed:', error);
+            reject(error);
+        };
+
+        const onConnectionDisconnected = () => {
+            console.log('Connection disconnected');
+        };
+
+        connection.addEventListener(
+            JitsiMeetJS.events.connection.CONNECTION_ESTABLISHED,
+            onConnectionSuccess);
+        connection.addEventListener(
+            JitsiMeetJS.events.connection.CONNECTION_FAILED,
+            onConnectionFailed);
+        connection.addEventListener(
+            JitsiMeetJS.events.connection.CONNECTION_DISCONNECTED,
+            onConnectionDisconnected);
+
+        connection.connect();
+    });
 }
 
 // Leave the room and proceed to cleanup.
